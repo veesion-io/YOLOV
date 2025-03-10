@@ -176,7 +176,7 @@ class VIDDataset(torchDataset):
             return res[:15000]
 
     def get_annotation(self, path, test_size):
-        path = path.replace("Data", "Annotations").replace("JPEG", "xml")
+        path = path.replace("train", "Annotations").replace("jpg", "xml")
         if os.path.isdir(path):
             files = get_xml_list(path)
         else:
