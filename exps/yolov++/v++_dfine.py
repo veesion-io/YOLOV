@@ -3,7 +3,7 @@ import torch.nn as nn
 import sys
 import torch
 
-sys.path.append("..")
+sys.path.append("../D-FINE")
 from exps.yolov.yolov_base import Exp as MyExp
 from loguru import logger
 import os
