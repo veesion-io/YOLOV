@@ -21,7 +21,7 @@ __all__ = [
 
 
 def get_model_info(model: nn.Module, tsize: Sequence[int]) -> str:
-    stride = 640
+    stride = 960
     img = torch.zeros((1, 3, stride, stride), device=next(model.parameters()).device)
     flops, params = profile(deepcopy(model), inputs=(img,), verbose=False)
     params /= 1e6
@@ -95,7 +95,9 @@ def fuse_model(model: nn.Module) -> nn.Module:
     return model
 
 
-def replace_module(module, replaced_module_type, new_module_type, replace_func=None) -> nn.Module:
+def replace_module(
+    module, replaced_module_type, new_module_type, replace_func=None
+) -> nn.Module:
     """
     Replace given type in module to a new type. mostly used in deploy.
 
