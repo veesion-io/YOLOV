@@ -64,7 +64,7 @@ class Exp(MyExp):
 
     def get_model(self):
         # rewrite get model func from yolox
-        in_channels = [512, 1024, 2048]  # D-FINE
+        in_channels = [256, 256, 256]  # D-FINE
         # backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels)
 
         """Load model EXACTLY like the working script"""
