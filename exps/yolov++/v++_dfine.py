@@ -3,15 +3,13 @@ import torch.nn as nn
 import sys
 import torch
 
-sys.path.append("../D-FINE")
+sys.path.append("D-FINE")
 from exps.yolov.yolov_base import Exp as MyExp
 from loguru import logger
 import os
 import sys
 
-sys.path.insert(
-    0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "../D-FINE/")
-)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "D-FINE/"))
 
 import argparse
 
