@@ -16,11 +16,11 @@ from yolox.data.data_augment import Vid_Val_Transform
 class Exp(BaseExp):
     def __init__(self):
         super().__init__()
-        self.archi_name = 'YOLOV'
-        self.backbone_name = 'MCSP'
+        self.archi_name = "YOLOV"
+        self.backbone_name = "MCSP"
         # ---------------- model config ---------------- #
         # detect classes number of model
-        self.num_classes = 30
+        self.num_classes = 13
         # factor of model depth
         self.depth = 1.00
         # factor of model width
@@ -64,21 +64,21 @@ class Exp(BaseExp):
         self.fix_all = False
         # global feature fusion
         self.gmode = True
-        #local feature fusion
+        # local feature fusion
         self.lmode = False
         # both local and global feature fusion
         self.both_mode = False
-        #lframe for training
+        # lframe for training
         self.lframe = 0
-        #lframe for validation
+        # lframe for validation
         self.lframe_val = 0
-        #local block number
+        # local block number
         self.localBlocks = 1
-        #global frames for training
+        # global frames for training
         self.gframe = 16
-        #globale frames for validation
+        # globale frames for validation
         self.gframe_val = 32
-        #sequence number for validation,-1 denote all
+        # sequence number for validation,-1 denote all
         self.tnum = -1
         #
         self.local_stride = 1
@@ -88,58 +88,58 @@ class Exp(BaseExp):
         self.globalBlocks = 1
 
         # ---------------- local mode config --------- #
-        #ffn in local blocks
+        # ffn in local blocks
         self.use_ffn = True
-        #time emb in local blocks
+        # time emb in local blocks
         self.use_time_emd = False
         # loc emb in local blocks, ref to RelationDet
         self.use_loc_emd = True
         # fuse type for QK and local sim
-        self.loc_fuse_type = 'add'
-        #qkv or only linear
+        self.loc_fuse_type = "add"
+        # qkv or only linear
         self.use_qkv = True
         # mask reference features in local frames
         self.local_mask = False
-        #which branch to mask for local_mask, cls or reg or ''
-        self.local_mask_branch = ''
-        #convert the xyxy to pure pos emb if true
+        # which branch to mask for local_mask, cls or reg or ''
+        self.local_mask_branch = ""
+        # convert the xyxy to pure pos emb if true
         self.pure_pos_emb = False
-        #use conf guided feature agg in local blocks or not
+        # use conf guided feature agg in local blocks or not
         self.loc_conf = False
-        #use iou based feature agg in local blocks or not, if ture will set use_loc_emb,use_time_emb and pure_pos_emb to False
+        # use iou based feature agg in local blocks or not, if ture will set use_loc_emb,use_time_emb and pure_pos_emb to False
         self.iou_base = False
         # try to re-confidence the iou score in reg branch
         self.reconf = False
-        #only use ota assignment lables for supervision in re-conf
+        # only use ota assignment lables for supervision in re-conf
         self.ota_mode = False
-        #only use ota assignment lables for supervision in re-cls
+        # only use ota assignment lables for supervision in re-cls
         self.ota_cls = False
-        #traj linking for post-processing before the second nms
+        # traj linking for post-processing before the second nms
         self.traj_linking = False
-        #minimal limitation for candidates
+        # minimal limitation for candidates
         self.minimal_limit = 0
-        #add vid cls branch
+        # add vid cls branch
         self.vid_cls = True
-        #add vid reg branch
+        # add vid reg branch
         self.vid_reg = False
-        #threshold for reg agg
+        # threshold for reg agg
         self.conf_sim_thresh = 0.99
 
         # ---------------- dataloader config ---------------- #
         # set worker to 12 for shorter dataloader init time
         # If your training process cost many memory, reduce this value.
         self.data_num_workers = 12
-        self.input_size = (576, 576)  # (height, width)
+        self.input_size = (960, 960)  # (height, width)
         # Actual multiscale ranges: [640 - 5 * 32, 640 + 5 * 32].
         # To disable multiscale training, set the value to 0.
         self.multiscale_range = 5
         # You can uncomment this line to specify a multiscale range
         # self.random_size = (14, 26)
         # dir of dataset images, if data_dir is None, this project will use `datasets` dir
-        self.data_dir = '/mnt/weka/scratch/yuheng.shi/dataset/VID'
+        self.data_dir = "/home/veesion/Bag-detector/YOLOV/videos_dataset/train/"
         # name of annotation file for training
-        self.vid_train_path = './yolox/data/datasets/train_seq.npy'
-        self.vid_val_path = './yolox/data/datasets/val_seq.npy'
+        self.vid_train_path = "./yolov_vid_train_dataset.npy"
+        self.vid_val_path = "./yolov_vid_val_dataset.npy"
         # path to vid name list
 
         # --------------- transform config ----------------- #
@@ -167,7 +167,7 @@ class Exp(BaseExp):
         # epoch number used for warmup
         self.warmup_epochs = 1
         # max training epoch
-        self.max_epoch = 7
+        self.max_epoch = 700
         # minimum learning rate during warmup
         self.warmup_lr = 0
         self.min_lr_ratio = 0.1
@@ -181,7 +181,7 @@ class Exp(BaseExp):
         self.ema = True
 
         # weight decay of optimizer
-        self.weight_decay = 5e-4
+        self.weight_decay = 0
         # momentum of optimizer
         self.momentum = 0.9
         # log period in iter, for example,
@@ -198,7 +198,7 @@ class Exp(BaseExp):
 
         # -----------------  testing config ------------------ #
         # output image size during evaluation/test
-        self.test_size = (576, 576)
+        self.test_size = (960, 960)
         # confidence threshold during evaluation/test,
         # boxes whose scores are less than test_conf will be filtered
         self.test_conf = 0.001
@@ -207,58 +207,63 @@ class Exp(BaseExp):
 
     def get_model(self):
         # rewrite get model func from yolox
-        if self.backbone_name == 'MCSP':
+        if self.backbone_name == "MCSP":
             in_channels = [256, 512, 1024]
             from yolox.models import YOLOPAFPN
+
             backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels)
-        elif 'Swin' in self.backbone_name:
+        elif "Swin" in self.backbone_name:
             from yolox.models import YOLOPAFPN_Swin
 
-            if self.backbone_name == 'Swin_Tiny':
+            if self.backbone_name == "Swin_Tiny":
                 in_channels = [192, 384, 768]
                 out_channels = [192, 384, 768]
-                backbone = YOLOPAFPN_Swin(in_channels=in_channels,
-                                          out_channels=out_channels,
-                                          act=self.act,
-                                          in_features=(1, 2, 3))
-            elif self.backbone_name == 'Swin_Base':
+                backbone = YOLOPAFPN_Swin(
+                    in_channels=in_channels,
+                    out_channels=out_channels,
+                    act=self.act,
+                    in_features=(1, 2, 3),
+                )
+            elif self.backbone_name == "Swin_Base":
                 in_channels = [256, 512, 1024]
                 out_channels = [256, 512, 1024]
-                backbone = YOLOPAFPN_Swin(in_channels=in_channels,
-                                          out_channels=out_channels,
-                                          act=self.act,
-                                          in_features=(1, 2, 3),
-                                          swin_depth=[2, 2, 18, 2],
-                                          num_heads=[4, 8, 16, 32],
-                                          base_dim=int(in_channels[0] / 2),
-                                          pretrain_img_size=self.pretrain_img_size,
-                                          window_size=self.window_size,
-                                          width=self.width,
-                                          depth=self.depth
-                                          )
-        elif 'Focal' in self.backbone_name:
+                backbone = YOLOPAFPN_Swin(
+                    in_channels=in_channels,
+                    out_channels=out_channels,
+                    act=self.act,
+                    in_features=(1, 2, 3),
+                    swin_depth=[2, 2, 18, 2],
+                    num_heads=[4, 8, 16, 32],
+                    base_dim=int(in_channels[0] / 2),
+                    pretrain_img_size=self.pretrain_img_size,
+                    window_size=self.window_size,
+                    width=self.width,
+                    depth=self.depth,
+                )
+        elif "Focal" in self.backbone_name:
             from yolox.models import YOLOPAFPN_focal
+
             fpn_in_channles = [96 * 4, 96 * 8, 96 * 16]
             in_channels = self.focal_fpn_channels
-            backbone = YOLOPAFPN_focal(in_channels=fpn_in_channles,
-                                       out_channels=in_channels,
-                                       act=self.act,
-                                       in_features=(1, 2, 3),
-                                       depths=[2, 2, 18, 2],
-                                       focal_levels=[4, 4, 4, 4],
-                                       focal_windows=[3, 3, 3, 3],
-                                       use_conv_embed=True,
-                                       use_postln=True,
-                                       use_postln_in_modulation=False,
-                                       use_layerscale=True,
-                                       base_dim=192,  # int(in_channels[0])
-                                       depth=self.depth,
-                                       width=self.width
-                                       )
-
+            backbone = YOLOPAFPN_focal(
+                in_channels=fpn_in_channles,
+                out_channels=in_channels,
+                act=self.act,
+                in_features=(1, 2, 3),
+                depths=[2, 2, 18, 2],
+                focal_levels=[4, 4, 4, 4],
+                focal_windows=[3, 3, 3, 3],
+                use_conv_embed=True,
+                use_postln=True,
+                use_postln_in_modulation=False,
+                use_layerscale=True,
+                base_dim=192,  # int(in_channels[0])
+                depth=self.depth,
+                width=self.width,
+            )
 
         else:
-            raise NotImplementedError('backbone not support')
+            raise NotImplementedError("backbone not support")
         from yolox.models.yolovp_msa import YOLOXHead
         from yolox.models.myolox import YOLOX
 
@@ -268,22 +273,50 @@ class Exp(BaseExp):
                     m.eps = 1e-3
                     m.momentum = 0.03
 
-
         for layer in backbone.parameters():
             layer.requires_grad = False  # fix the backbone
-        more_args = {'use_ffn': self.use_ffn, 'use_time_emd': self.use_time_emd, 'use_loc_emd': self.use_loc_emd,
-                     'loc_fuse_type': self.loc_fuse_type, 'use_qkv': self.use_qkv,
-                     'local_mask': self.local_mask, 'local_mask_branch': self.local_mask_branch,
-                     'pure_pos_emb':self.pure_pos_emb,'loc_conf':self.loc_conf,'iou_base':self.iou_base,
-                     'reconf':self.reconf,'ota_mode':self.ota_mode,'ota_cls':self.ota_cls,'traj_linking':self.traj_linking,
-                     'iou_window':self.iou_window,'globalBlocks':self.globalBlocks,'minimal_limit':self.minimal_limit,
-                     'vid_cls':self.vid_cls,'vid_reg':self.vid_reg,'conf_sim_thresh':self.conf_sim_thresh,
-                     }
-        head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, heads=self.head, drop=self.drop_rate,
-                         use_score=self.use_score, defualt_p=self.defualt_p, sim_thresh=self.sim_thresh,
-                         pre_nms=self.pre_nms, ave=self.ave, defulat_pre=self.defualt_pre, test_conf=self.test_conf,
-                         use_mask=self.use_mask,gmode=self.gmode,lmode=self.lmode,both_mode=self.both_mode,
-                         localBlocks = self.localBlocks,**more_args)
+        more_args = {
+            "use_ffn": self.use_ffn,
+            "use_time_emd": self.use_time_emd,
+            "use_loc_emd": self.use_loc_emd,
+            "loc_fuse_type": self.loc_fuse_type,
+            "use_qkv": self.use_qkv,
+            "local_mask": self.local_mask,
+            "local_mask_branch": self.local_mask_branch,
+            "pure_pos_emb": self.pure_pos_emb,
+            "loc_conf": self.loc_conf,
+            "iou_base": self.iou_base,
+            "reconf": self.reconf,
+            "ota_mode": self.ota_mode,
+            "ota_cls": self.ota_cls,
+            "traj_linking": self.traj_linking,
+            "iou_window": self.iou_window,
+            "globalBlocks": self.globalBlocks,
+            "minimal_limit": self.minimal_limit,
+            "vid_cls": self.vid_cls,
+            "vid_reg": self.vid_reg,
+            "conf_sim_thresh": self.conf_sim_thresh,
+        }
+        head = YOLOXHead(
+            self.num_classes,
+            self.width,
+            in_channels=in_channels,
+            heads=self.head,
+            drop=self.drop_rate,
+            use_score=self.use_score,
+            defualt_p=self.defualt_p,
+            sim_thresh=self.sim_thresh,
+            pre_nms=self.pre_nms,
+            ave=self.ave,
+            defulat_pre=self.defualt_pre,
+            test_conf=self.test_conf,
+            use_mask=self.use_mask,
+            gmode=self.gmode,
+            lmode=self.lmode,
+            both_mode=self.both_mode,
+            localBlocks=self.localBlocks,
+            **more_args,
+        )
 
         for layer in head.stems.parameters():
             layer.requires_grad = False  # set stem fixed
@@ -303,7 +336,7 @@ class Exp(BaseExp):
 
         def fix_bn(m):
             classname = m.__class__.__name__
-            if classname.find('BatchNorm') != -1:
+            if classname.find("BatchNorm") != -1:
                 m.eval()
 
         self.model.apply(init_yolo)
@@ -313,22 +346,24 @@ class Exp(BaseExp):
         return self.model
 
     def get_data_loader(
-            self, batch_size, is_distributed, no_aug=False, cache_img=False
+        self, batch_size, is_distributed, no_aug=False, cache_img=False
     ):
         from yolox.data import TrainTransform
         from yolox.data.datasets.mosaicdetection import MosaicDetection_VID
+
         assert batch_size == self.lframe + self.gframe
-        dataset = vid.VIDDataset(file_path=self.vid_train_path,
-                                 img_size=self.input_size,
-                                 preproc=TrainTransform(
-                                     max_labels=50,
-                                     flip_prob=self.flip_prob,
-                                     hsv_prob=self.hsv_prob),
-                                 lframe=self.lframe,  # batch_size,
-                                 gframe=self.gframe,
-                                 dataset_pth=self.data_dir,
-                                 local_stride=self.local_stride,
-                                 )
+        dataset = vid.VIDDataset(
+            file_path=self.vid_train_path,
+            img_size=self.input_size,
+            preproc=TrainTransform(
+                max_labels=50, flip_prob=self.flip_prob, hsv_prob=self.hsv_prob
+            ),
+            lframe=self.lframe,  # batch_size,
+            gframe=self.gframe,
+            mode="uniform",
+            dataset_pth=self.data_dir,
+            local_stride=self.local_stride,
+        )
         if self.use_aug:
             # NO strong aug by defualt
             dataset = MosaicDetection_VID(
@@ -336,9 +371,8 @@ class Exp(BaseExp):
                 mosaic=False,
                 img_size=self.input_size,
                 preproc=TrainTransform(
-                    max_labels=120,
-                    flip_prob=self.flip_prob,
-                    hsv_prob=self.hsv_prob),
+                    max_labels=120, flip_prob=self.flip_prob, hsv_prob=self.hsv_prob
+                ),
                 degrees=self.degrees,
                 translate=self.translate,
                 mosaic_scale=self.mosaic_scale,
@@ -348,9 +382,11 @@ class Exp(BaseExp):
                 enable_mixup=self.enable_mixup,
                 mosaic_prob=self.mosaic_prob,
                 mixup_prob=self.mixup_prob,
-                dataset_path=self.data_dir
+                dataset_path=self.data_dir,
             )
-        dataset = vid.get_trans_loader(batch_size=batch_size, data_num_workers=4, dataset=dataset)
+        dataset = vid.get_trans_loader(
+            batch_size=batch_size, data_num_workers=12, dataset=dataset
+        )
         return dataset
 
     def random_resize(self, data_loader, epoch, rank, is_distributed):
@@ -358,7 +394,7 @@ class Exp(BaseExp):
 
         if rank == 0:
             size_factor = self.input_size[1] * 1.0 / self.input_size[0]
-            if not hasattr(self, 'random_size'):
+            if not hasattr(self, "random_size"):
                 min_size = int(self.input_size[0] / 32) - self.multiscale_range
                 max_size = int(self.input_size[0] / 32) + self.multiscale_range
                 self.random_size = (min_size, max_size)
@@ -428,17 +464,29 @@ class Exp(BaseExp):
         )
         return scheduler
 
-    def get_eval_loader(self, batch_size, tnum=None, data_num_workers=8,formal=False):
+    def get_eval_loader(self, batch_size, tnum=None, data_num_workers=8, formal=False):
         if tnum == None:
             tnum = self.tnum
-        assert batch_size == self.lframe_val+self.gframe_val
-        dataset_val = vid.VIDDataset(file_path=self.vid_val_path,
-                                     img_size=self.test_size, preproc=Vid_Val_Transform(), lframe=self.lframe_val,
-                                     gframe=self.gframe_val, val=True, dataset_pth=self.data_dir, tnum=tnum,formal=formal,
-                                     traj_linking=self.traj_linking, local_stride=self.local_stride,)
-        val_loader = vid.vid_val_loader(batch_size=batch_size,
-                                        data_num_workers=data_num_workers,
-                                        dataset=dataset_val, )
+        assert batch_size == self.lframe_val + self.gframe_val
+        dataset_val = vid.VIDDataset(
+            file_path=self.vid_val_path,
+            img_size=self.test_size,
+            preproc=Vid_Val_Transform(),
+            lframe=self.lframe_val,
+            gframe=self.gframe_val,
+            val=True,
+            dataset_pth=self.data_dir,
+            tnum=tnum,
+            formal=formal,
+            traj_linking=self.traj_linking,
+            local_stride=self.local_stride,
+            mode="uniform",
+        )
+        val_loader = vid.vid_val_loader(
+            batch_size=batch_size,
+            data_num_workers=data_num_workers,
+            dataset=dataset_val,
+        )
 
         return val_loader
 
@@ -455,12 +503,13 @@ class Exp(BaseExp):
             num_classes=self.num_classes,
             lframe=self.lframe_val,
             gframe=self.gframe_val,
-            first_only = False,
+            first_only=False,
         )
         return evaluator
 
     def get_trainer(self, args):
         from yolox.core import Trainer
+
         trainer = Trainer(self, args)
         # NOTE: trainer shouldn't be an attribute of exp object
         return trainer

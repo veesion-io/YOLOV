@@ -15,14 +15,16 @@ from yolox.core.vid_trainer import Trainer
 
 from yolox.exp import get_exp
 from yolox.utils import configure_nccl, configure_omp, get_num_devices
-from yolox.data.data_augment import ValTransform,Vid_Val_Transform
+from yolox.data.data_augment import ValTransform, Vid_Val_Transform
 from yolox.data.datasets import vid
 import os
+
+
 def make_parser():
     parser = argparse.ArgumentParser("YOLOX train parser")
     parser.add_argument("-expn", "--experiment-name", type=str, default=None)
     parser.add_argument("-n", "--name", type=str, default=None, help="model name")
-    parser.add_argument("--tsize", default=576, type=int, help="test img size")
+    parser.add_argument("--tsize", default=960, type=int, help="test img size")
     # distributed
     parser.add_argument(
         "--dist-backend", default="nccl", type=str, help="distributed backend"
@@ -40,14 +42,14 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default='',
+        default="",
         type=str,
         help="plz input your expriment description file",
     )
     parser.add_argument(
         "--resume", default=False, action="store_true", help="resume training"
     )
-    parser.add_argument("-c", "--ckpt", default='', type=str, help="checkpoint file")
+    parser.add_argument("-c", "--ckpt", default="", type=str, help="checkpoint file")
 
     parser.add_argument(
         "-e",
@@ -92,6 +94,7 @@ def make_parser():
     )
     return parser
 
+
 @logger.catch
 def main(exp, args):
     if exp.seed is not None:
@@ -110,8 +113,8 @@ def main(exp, args):
     cudnn.benchmark = True
     lframe = int(exp.lframe_val)
     gframe = int(exp.gframe_val)
-    val_loader = exp.get_eval_loader(batch_size=lframe+gframe,data_num_workers=6)
-    trainer = Trainer(exp, args,val_loader,val=False)
+    val_loader = exp.get_eval_loader(batch_size=lframe + gframe, data_num_workers=6)
+    trainer = Trainer(exp, args, val_loader, val=False)
     trainer.train()
 
 

@@ -9,23 +9,24 @@ class Exp(MyExp):
     def __init__(self):
         super(Exp, self).__init__()
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
-        self.data_dir = '/mnt/weka/scratch/yuheng.shi/dataset/VID' #'/mnt/weka/scratch/datasets/coco' #
-        self.train_ann = "vid_train_coco.json"
+        self.data_dir = "/home/veesion/Bag-detector/YOLOV/coco/"  #'/mnt/weka/scratch/datasets/coco' #
+        self.train_ann = "instances_train.json"
         # name of annotation file for evaluation
-        self.val_ann = "vid_val10000_coco.json"
-        #self.val_ann = "vid_val10000_coco_fg.json"
-        self.basic_lr_per_img = 0.0005 / 64.0
+        self.val_ann = "instances_val.json"
+        # self.val_ann = "vid_val10000_coco_fg.json"
+        self.basic_lr_per_img = 0.0005 / 16.0  # orig : / 64
         self.save_history_ckpt = False
         self.max_epoch = 15
-        self.input_size = (640,640)
-        self.test_size = (640,640)
+        self.input_size = (960, 960)
+        self.test_size = (960, 960)
         self.eval_interval = 1
         self.warmup_epochs = 1
         self.no_aug_epochs = 7
-        self.num_classes = 30
+        self.num_classes = 13
         self.test_conf = 0.001
-        self.train_name = ''
-        self.val_name = ''
+        self.train_name = ""
+        self.val_name = ""
+
     def get_model(self):
         def init_yolo(M):
             for m in M.modules():
@@ -36,8 +37,16 @@ class Exp(MyExp):
         in_channels = [192, 384, 768]
         out_channels = [192, 384, 768]
         from yolox.models import YOLOX, YOLOPAFPN_Swin, YOLOXHead
-        backbone = YOLOPAFPN_Swin(in_channels=in_channels, out_channels=out_channels, act=self.act,in_features=(1,2,3))
-        head = YOLOXHead(self.num_classes, self.width, in_channels=out_channels, act=self.act)
+
+        backbone = YOLOPAFPN_Swin(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            act=self.act,
+            in_features=(1, 2, 3),
+        )
+        head = YOLOXHead(
+            self.num_classes, self.width, in_channels=out_channels, act=self.act
+        )
         self.model = YOLOX(backbone, head)
 
         self.model.apply(init_yolo)
@@ -51,20 +60,26 @@ class Exp(MyExp):
                 lr = self.warmup_lr
             else:
                 lr = self.basic_lr_per_img * batch_size
-            pg0, pg1, pg2,pg3 = [], [], [], []  # optimizer parameter groups
+            pg0, pg1, pg2, pg3 = [], [], [], []  # optimizer parameter groups
 
             for k, v in self.model.named_modules():
                 if hasattr(v, "bias") and isinstance(v.bias, nn.Parameter):
                     pg2.append(v.bias)  # biases
                 if isinstance(v, nn.BatchNorm2d) or "bn" in k:
                     pg0.append(v.weight)  # no decay
-                elif hasattr(v,'absolute_pos_embed') or hasattr(v,'relative_position_bias_table') or hasattr(v,'norm'):
-                    if hasattr(v,'weight'):
+                elif (
+                    hasattr(v, "absolute_pos_embed")
+                    or hasattr(v, "relative_position_bias_table")
+                    or hasattr(v, "norm")
+                ):
+                    if hasattr(v, "weight"):
                         pg3.append(v.weight)
                 elif hasattr(v, "weight") and isinstance(v.weight, nn.Parameter):
                     pg1.append(v.weight)  # apply decay
 
-            optimizer = torch.optim.AdamW(params=pg0,lr=lr,weight_decay=self.weight_decay)
+            optimizer = torch.optim.AdamW(
+                params=pg0, lr=lr, weight_decay=self.weight_decay
+            )
             optimizer.add_param_group(
                 {"params": pg1, "weight_decay": self.weight_decay}
             )  # add pg1 with weight_decay

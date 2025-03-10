@@ -28,7 +28,9 @@ def augment_hsv(img, hgain=5, sgain=30, vgain=30):
     img_hsv[..., 1] = np.clip(img_hsv[..., 1] + hsv_augs[1], 0, 255)
     img_hsv[..., 2] = np.clip(img_hsv[..., 2] + hsv_augs[2], 0, 255)
 
-    cv2.cvtColor(img_hsv.astype(img.dtype), cv2.COLOR_HSV2BGR, dst=img)  # no return needed
+    cv2.cvtColor(
+        img_hsv.astype(img.dtype), cv2.COLOR_HSV2BGR, dst=img
+    )  # no return needed
 
 
 def get_aug_params(value, center=0):
@@ -271,8 +273,11 @@ class TrainTransform:
         self.hsv_prob = hsv_prob
 
     def __call__(self, image, targets, input_dim):
-        boxes = targets[:, :4].copy()
-        labels = targets[:, 4].copy()
+        try:
+            boxes = targets[:, :4].copy()
+            labels = targets[:, 4].copy()
+        except:
+            boxes, labels = [], []
         if len(boxes) == 0:
             targets = np.zeros((self.max_labels, 5), dtype=np.float32)
             image, r_o = preproc(image, input_dim)
@@ -348,6 +353,7 @@ class ValTransform:
             img /= np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
         return img, np.zeros((1, 5))
 
+
 class Vid_Val_Transform:
     """
     Defines the transformations that should be applied to test PIL image
@@ -378,6 +384,9 @@ class Vid_Val_Transform:
             img /= 255.0
             img -= np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
             img /= np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
+        if len(res) == 0:
+            targets = np.zeros((13, 5), dtype=np.float32)
+            return img, targets
         boxes = res[:, :4].copy()
         labels = res[:, 4].copy()
         boxes *= r_
